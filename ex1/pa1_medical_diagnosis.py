@@ -64,7 +64,7 @@ class NaiveBayes:
         :param disease: disease name (string)
         :return: Array of m conditional expectation E(Sj | disease) (for each symptom)
         """
-        pass
+        return self.get_p_S_cond_D(disease)
 
     def get_log_p_S_joint_D(self, data, disease):
         """
@@ -73,15 +73,20 @@ class NaiveBayes:
         :param disease: disease name (string)
         :return: Array of n log probability values log P(S, disease) (for each data point)
         """
-        pass
+        probs = np.where(data, self.get_p_S_cond_D(disease), 1 - self.get_p_S_cond_D(disease))
+        return np.log(probs).sum(axis=1) + np.log(self.get_p_D(disease))
 
-    def get_log_p_S(self, data):
+    def get_log_p_S(self, data) -> np.ndarray:
         """
         TODO. Compute the marginal log probabilities (log-likelihood): log P(S = data)
         :param data: Row vectors of data points S (n x m)
         :return: Array of n log probability values log P(S = data) (for each data point)
         """
-        pass
+        data_joint_prob = np.empty((data.shape[0], len(self.diseases)), dtype=float)
+        for col_index, disease in enumerate(self.diseases):
+            data_joint_prob[:, col_index] = self.get_log_p_S_joint_D(data, disease)
+        return logsumexp(data_joint_prob, axis=1)
+
 
     def get_p_D_given_S(self, data):
         """
@@ -125,14 +130,18 @@ def q_3():
     mat = load_data('data/test_validation')
     validation_data = mat['validation'].values
     test_data = mat['test'].values
+    validation_marginal_log_likelihood = nb.get_log_p_S(validation_data)
+    avg = validation_marginal_log_likelihood.mean()
+    std = validation_marginal_log_likelihood.std()
+    marginal_log_test = nb.get_log_p_S(test_data)
+    corrupt_indices = marginal_log_test < avg - 3 * std
+    real_marginal_log_likelihood = marginal_log_test[~corrupt_indices]
+    corrupt_marginal_log_likelihood = marginal_log_test[corrupt_indices]
 
     '''
     TODO. Calculate marginal_log_likelihood on validation data, define prediction rule, 
             and calculate marginal_log_likelihood of test samples classified as real and as corrupted.
     '''
-    validation_marginal_log_likelihood = None
-    real_marginal_log_likelihood = None
-    corrupt_marginal_log_likelihood = None
 
     # plot histograms
     plt.figure()
@@ -186,8 +195,8 @@ def main():
 
     q_2()
     q_3()
-    q_4()
-    q_5()
+    # q_4()
+    # q_5()
 
 
 if __name__== '__main__':
