@@ -5,7 +5,7 @@ Programming Assignment 1 - Bayesian Networks
 (Complete the missing parts (TODO))
 """
 
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 from scipy.special import logsumexp
@@ -82,11 +82,8 @@ class NaiveBayes:
         :param data: Row vectors of data points S (n x m)
         :return: Array of n log probability values log P(S = data) (for each data point)
         """
-        data_joint_prob = np.empty((data.shape[0], len(self.diseases)), dtype=float)
-        for col_index, disease in enumerate(self.diseases):
-            data_joint_prob[:, col_index] = self.get_log_p_S_joint_D(data, disease)
+        data_joint_prob = self.__joint_log_prob(data)
         return logsumexp(data_joint_prob, axis=1)
-
 
     def get_p_D_given_S(self, data):
         """
@@ -103,7 +100,14 @@ class NaiveBayes:
         :param data: Row vectors of data points S (n x m)
         :return: array of n predicted labels (for each data point)
         """
-        pass
+        joint = self.__joint_log_prob(data)
+        return joint.argmax(1)
+
+    def __joint_log_prob(self, data):
+        data_joint_prob = np.empty((data.shape[0], len(self.diseases)), dtype=float)
+        for col_index, disease in enumerate(self.diseases):
+            data_joint_prob[:, col_index] = self.get_log_p_S_joint_D(data, disease)
+        return data_joint_prob
 
 
 def q_2():
@@ -146,8 +150,9 @@ def q_3():
     # plot histograms
     plt.figure()
     plt.title('Histogram of marginal log-likelihood')
-    mi = np.min([corrupt_marginal_log_likelihood.min(), real_marginal_log_likelihood.min(), validation_marginal_log_likelihood.min()])
-    _, bins, _ = plt.hist(validation_marginal_log_likelihood, label='validation data', bins=np.arange(mi-10, 0, 1))
+    mi = np.min([corrupt_marginal_log_likelihood.min(), real_marginal_log_likelihood.min(),
+                 validation_marginal_log_likelihood.min()])
+    _, bins, _ = plt.hist(validation_marginal_log_likelihood, label='validation data', bins=np.arange(mi - 10, 0, 1))
     plt.hist(real_marginal_log_likelihood, label='real test data', bins=bins)
     plt.hist(corrupt_marginal_log_likelihood, label='corrupted test data', bins=bins)
     plt.xlabel('marginal log-likelihood')
@@ -156,7 +161,6 @@ def q_3():
     plt.savefig('q3_hist', bbox_inches='tight')
     plt.show()
     plt.close()
-
 
 
 def q_4():
@@ -195,9 +199,9 @@ def main():
 
     q_2()
     q_3()
-    # q_4()
-    # q_5()
+    q_4()
+    q_5()
 
 
-if __name__== '__main__':
+if __name__ == '__main__':
     main()
